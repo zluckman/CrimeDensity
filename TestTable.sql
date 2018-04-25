@@ -2,9 +2,9 @@
 #drop table testtable;
 
 create table if not exists population(
-	fips_code INT(5),
+	fips_code INT(10),
     geography VARCHAR(40),
-    year INT(4),
+    year INT(10),
     program_type VARCHAR(80),
     population INT(8)
     );
@@ -19,8 +19,8 @@ IGNORE 1 ROWS;
 create table if not exists crimedata(
 	county VARCHAR(40),
     agency VARCHAR(40),
-    year INT(4),
-    months_reported INT(4),
+    year INT(10),
+    months_reported INT(10),
     index_total INT(10),
     violent_total INT(10),
     murder INT(10),
@@ -41,7 +41,33 @@ ENCLOSED BY '"'
 LINES TERMINATED BY '\n'
 IGNORE 1 ROWS;
 
-SELECT * FROM crimedata;
 
--- drop table population;
--- drop table crimedata;
+create table if not exists policedata(
+	county VARCHAR(40),
+    pd VARCHAR(40),
+    year INT(10),
+    sworn_full_time INT(10),
+    sworn_part_time INT(10),
+    sworn_total INT(10),
+    civilian_full_time INT(10),
+    civilian_part_time INT(10),
+    civilian_total INT(10),
+    full_time_total INT(10),
+    part_time_total INT(10),
+    grand_total INT(10)
+);
+
+LOAD DATA LOCAL INFILE 'C:/ProgramData/MySQL/MySQL Server 5.7/Uploads/Law_Enforcement_Personnel_by_Agency___Beginning_2007.csv' 
+INTO TABLE policedata 
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+SELECT * FROM population;
+SELECT * FROM crimedata;
+SELECT * FROM policedata;
+
+drop table population, crimedata, policedata;
+
+

@@ -6,15 +6,17 @@
 -- 	Print 'New table created'
 -- END
 
-set foreign_key_checks=0;
-drop table population;
+-- set foreign_key_checks=0;
+-- drop table population;
 create table if not exists population(
 	fips_code INT(10),
     geography VARCHAR(40),
     year INT(10),
     program_type VARCHAR(80),
-    population INT(8),
-    PRIMARY KEY(geography, year, program_type)           
+    population INT(8)
+--     PRIMARY KEY(geography, year, program_type)
+--     FOREIGN KEY(geography, year)
+--     REFERENCES crimedata(county, year)
     );
     
 LOAD DATA LOCAL INFILE 'C:/ProgramData/MySQL/MySQL Server 5.7/Uploads/Annual_Population_Estimates_for_New_York_State_and_Counties__Beginning_1970.csv' 
@@ -25,7 +27,7 @@ LINES TERMINATED BY '\n'
 IGNORE 1 ROWS;
 
 
-drop table crimedata;
+-- drop table crimedata;
 create table if not exists crimedata(
 	county VARCHAR(40),
     agency VARCHAR(40),
@@ -41,14 +43,14 @@ create table if not exists crimedata(
     burglary INT(10),
     larceny INT(10),
     motor_vehicle_theft INT(10),
-    region VARCHAR(40),
-    PRIMARY KEY(county, agency, year),
-    FOREIGN KEY(county, year)
-		REFERENCES population(geography, year)
-        ON UPDATE CASCADE,
-	FOREIGN KEY(county, agency, year)
-		REFERENCES policedata(county, pd, year)
-        ON UPDATE CASCADE
+    region VARCHAR(40)
+--     PRIMARY KEY(county, agency, year)
+--     FOREIGN KEY(county, year)
+-- 		REFERENCES population(geography, year)
+--         ON UPDATE CASCADE,
+-- 	FOREIGN KEY(county, agency, year)
+-- 		REFERENCES policedata(county, pd, year)
+--         ON UPDATE CASCADE
         
 );
 
@@ -61,7 +63,7 @@ IGNORE 1 ROWS;
 
 
 
-drop table policedata;
+-- drop table policedata;
 create table if not exists policedata(
 	county VARCHAR(40),
     pd VARCHAR(40),
@@ -74,9 +76,10 @@ create table if not exists policedata(
     civilian_total INT(10),
     full_time_total INT(10),
     part_time_total INT(10),
-    grand_total INT(10),
-    PRIMARY KEY(county, pd, year)
-    
+    grand_total INT(10)
+--     PRIMARY KEY(county, pd, year)
+-- --     FOREIGN KEY(county, pd, year)
+-- --     REFERENCES crimedata(county, agency, year)
 );
 
 LOAD DATA LOCAL INFILE 'C:/ProgramData/MySQL/MySQL Server 5.7/Uploads/Law_Enforcement_Personnel_by_Agency___Beginning_2007.csv' 
@@ -88,14 +91,14 @@ IGNORE 1 ROWS;
     
 -- Indexes don't seem to make the queries any faster
 -- because the primary key data is already sorted
-CREATE INDEX PopulationIndex ON
-	population(geography, year);
-    
-CREATE INDEX CrimeIndex ON
-	crimedata(county, agency, year);
-
-CREATE INDEX PoliceIndex ON
-	policedata(county, pd, year);
+-- CREATE INDEX PopulationIndex ON
+-- 	population(geography, year);
+--     
+-- CREATE INDEX CrimeIndex ON
+-- 	crimedata(county, agency, year);
+-- 
+-- CREATE INDEX PoliceIndex ON
+-- 	policedata(county, pd, year);
 
 SELECT * FROM population LIMIT 0,4000;
 SELECT * FROM crimedata LIMIT 0,20000;
@@ -124,3 +127,9 @@ create view crimepercapita as
     order by c.year, c.county;
 
 select * from crimepercapita limit 0,2000;
+
+create view crimeperthousand as
+	select county, agencies, year, population, crimesperperson * 1000 as crimesperthousand, index_total, violentperperson * 1000 as violentperthousand, violent_total, murderperperson*1000 as murderperthousand, murder, rapeperperson * 1000, rape, robberyperperson * 1000 as robberyperthousand, robbery, aggravated_assaultperperson * 1000 as aggravated_assaultperthousand, aggravated_assault, propertyperperson * 1000 as propertyperthousand, property_total, burglaryperperson * 1000 as burglaryperthousand, burglary, larcenyperperson * 1000 as larcenyperthousand, larceny, vehicletheftperperson * 1000 as vehicletheftperthousand, motor_vehicle_theft
+    from crimepercapita;
+    
+select * from crimeperthousand limit 0,2000;

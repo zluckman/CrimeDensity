@@ -1,10 +1,20 @@
+-- CREATE TRIGGER CreationTrigger
+-- ON Database
+-- FOR CREATE_TABLE
+-- AS
+-- BEGIN
+-- 	Print 'New table created'
+-- END
+
+set foreign_key_checks=0;
 drop table population;
 create table if not exists population(
 	fips_code INT(10),
     geography VARCHAR(40),
     year INT(10),
     program_type VARCHAR(80),
-    population INT(8)
+    population INT(8),
+    PRIMARY KEY(geography, year, program_type)           
     );
     
 LOAD DATA LOCAL INFILE 'C:/ProgramData/MySQL/MySQL Server 5.7/Uploads/Annual_Population_Estimates_for_New_York_State_and_Counties__Beginning_1970.csv' 
@@ -13,6 +23,7 @@ FIELDS TERMINATED BY ','
 ENCLOSED BY '"'
 LINES TERMINATED BY '\n'
 IGNORE 1 ROWS;
+
 
 drop table crimedata;
 create table if not exists crimedata(
@@ -30,7 +41,15 @@ create table if not exists crimedata(
     burglary INT(10),
     larceny INT(10),
     motor_vehicle_theft INT(10),
-    region VARCHAR(40)
+    region VARCHAR(40),
+    PRIMARY KEY(county, agency, year),
+    FOREIGN KEY(county, year)
+		REFERENCES population(geography, year)
+        ON UPDATE CASCADE,
+	FOREIGN KEY(county, agency, year)
+		REFERENCES policedata(county, pd, year)
+        ON UPDATE CASCADE
+        
 );
 
 LOAD DATA LOCAL INFILE 'C:/ProgramData/MySQL/MySQL Server 5.7/Uploads/Index_Crimes_by_County_and_Agency__Beginning_1990.csv' 
@@ -39,6 +58,8 @@ FIELDS TERMINATED BY ','
 ENCLOSED BY '"'
 LINES TERMINATED BY '\n'
 IGNORE 1 ROWS;
+
+
 
 drop table policedata;
 create table if not exists policedata(
@@ -53,7 +74,9 @@ create table if not exists policedata(
     civilian_total INT(10),
     full_time_total INT(10),
     part_time_total INT(10),
-    grand_total INT(10)
+    grand_total INT(10),
+    PRIMARY KEY(county, pd, year)
+    
 );
 
 LOAD DATA LOCAL INFILE 'C:/ProgramData/MySQL/MySQL Server 5.7/Uploads/Law_Enforcement_Personnel_by_Agency___Beginning_2007.csv' 
@@ -62,10 +85,21 @@ FIELDS TERMINATED BY ','
 ENCLOSED BY '"'
 LINES TERMINATED BY '\n'
 IGNORE 1 ROWS;
+    
+-- Indexes don't seem to make the queries any faster
+-- because the primary key data is already sorted
+CREATE INDEX PopulationIndex ON
+	population(geography, year);
+    
+CREATE INDEX CrimeIndex ON
+	crimedata(county, agency, year);
 
-SELECT * FROM population;
-SELECT * FROM crimedata;
-SELECT * FROM policedata;
+CREATE INDEX PoliceIndex ON
+	policedata(county, pd, year);
+
+SELECT * FROM population LIMIT 0,4000;
+SELECT * FROM crimedata LIMIT 0,20000;
+SELECT * FROM policedata LIMIT 0,10000;
 
 drop view policeandcrime;
 
@@ -77,14 +111,6 @@ create view policeandcrime as
     order by c.year, c.county;
 
 select * from policeandcrime;
-
-
-
-
-
-
-
-
 
 
 
